@@ -96,11 +96,27 @@ def get_or_train_model(df_model):
     numeric_cols = [c for c in X.columns if pd.api.types.is_numeric_dtype(X[c])]
     categorical_cols = [c for c in X.columns if c not in numeric_cols]
 
-    num_transform = SimpleImputer(strategy="median")
-    cat_transform = Pipeline(steps=[
-        ("imputer", SimpleImputer(strategy="most_frequent")),
-        ("onehot", OneHotEncoder(handle_unknown="ignore", sparse=False))
-    ])
+    from sklearn.preprocessing import OneHotEncoder
+import inspect
+
+def make_onehot_encoder(**kwargs):
+    init_sig = inspect.signature(OneHotEncoder.__init__)
+    valid_params = set(init_sig.parameters.keys())
+    safe_kwargs = {k: v for k, v in kwargs.items() if k in valid_params}
+    return OneHotEncoder(**safe_kwargs)
+
+encoder_kwargs = {"handle_unknown": "ignore"}
+if "sparse_output" in inspect.signature(OneHotEncoder.__init__).parameters:
+    encoder_kwargs["sparse_output"] = False
+elif "sparse" in inspect.signature(OneHotEncoder.__init__).parameters:
+    encoder_kwargs["sparse"] = False
+
+num_transform = SimpleImputer(strategy="median")
+cat_transform = Pipeline(steps=[
+    ("imputer", SimpleImputer(strategy="most_frequent")),
+    ("onehot", make_onehot_encoder(**encoder_kwargs))
+])
+
 
     preprocessor = ColumnTransformer(transformers=[
         ("num", num_transform, numeric_cols),
@@ -252,6 +268,7 @@ if st.checkbox("원 데이터 샘플 보기 (상단 50개)"):
 
 st.markdown("---")
 st.write("주의: 이 앱은 PoC(개념증명) 수준입니다. 실제 서비스 배포 전에는 입력 검증, 개인정보보호, 모델 검증(교차검증 등)이 필요합니다.")
+
 
 
 
