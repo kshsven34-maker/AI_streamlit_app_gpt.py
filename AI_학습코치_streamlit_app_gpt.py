@@ -120,7 +120,7 @@ num_transform = SimpleImputer(strategy="median")
     preprocessor = ColumnTransformer(transformers=[
         ("num", num_transform, numeric_cols),
         ("cat", cat_transform, categorical_cols)
-    ], remainder="drop")
+    ])
 
     clf = Pipeline(steps=[
         ("pre", preprocessor),
@@ -267,6 +267,7 @@ if st.checkbox("원 데이터 샘플 보기 (상단 50개)"):
 
 st.markdown("---")
 st.write("주의: 이 앱은 PoC(개념증명) 수준입니다. 실제 서비스 배포 전에는 입력 검증, 개인정보보호, 모델 검증(교차검증 등)이 필요합니다.")
+
 
 
 
